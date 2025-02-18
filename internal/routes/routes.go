@@ -4,8 +4,8 @@ import (
 	"log/slog"
 
 	"github.com/go-chi/chi"
-	"github.com/qwaq-dev/golnag-archive/pkg/handlers/middleware/logger"
-	"github.com/qwaq-dev/golnag-archive/pkg/handlers/upload"
+	"github.com/qwaq-dev/golnag-archive/internal/handlers/middleware/logger"
+	"github.com/qwaq-dev/golnag-archive/internal/handlers/upload"
 )
 
 func NewRouter(log *slog.Logger) *chi.Mux {

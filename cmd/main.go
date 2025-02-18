@@ -4,11 +4,11 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/qwaq-dev/golnag-archive/pkg/config"
-	"github.com/qwaq-dev/golnag-archive/pkg/lib/logger/handlers/slogpretty"
-	"github.com/qwaq-dev/golnag-archive/pkg/lib/logger/sl"
-	"github.com/qwaq-dev/golnag-archive/pkg/routes"
-	"github.com/qwaq-dev/golnag-archive/pkg/structures/server"
+	"github.com/qwaq-dev/golnag-archive/internal/config"
+	"github.com/qwaq-dev/golnag-archive/internal/routes"
+	"github.com/qwaq-dev/golnag-archive/internal/structures/server"
+	"github.com/qwaq-dev/golnag-archive/pkg/logger/handlers/slogpretty"
+	"github.com/qwaq-dev/golnag-archive/pkg/logger/sl"
 )
 
 const (

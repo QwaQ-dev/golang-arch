@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/qwaq-dev/golnag-archive/pkg/lib/logger/sl"
+	"github.com/qwaq-dev/golnag-archive/pkg/logger/sl"
 )
 
 const formDataKey = "file"
