@@ -12,7 +12,7 @@ func NewRouter(log *slog.Logger) *chi.Mux {
 	router := chi.NewRouter()
 
 	router.Use(logger.New(log))
-	router.Post("/upload", upload.UploadFile(log))
+	router.Post("/upload", upload.UploadFileHandler(log))
 
 	return router
 }

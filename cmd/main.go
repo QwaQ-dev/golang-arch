@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log/slog"
 	"os"
 
@@ -23,6 +24,7 @@ func main() {
 	router := routes.NewRouter(log)
 
 	srv := &server.Server{}
+	flag.Parse()
 
 	log.Info("Server starts on port"+cfg.Port, slog.String("env", cfg.Env))
 
