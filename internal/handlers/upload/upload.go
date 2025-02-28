@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/qwaq-dev/golnag-archive/internal/service/archive"
 	"github.com/qwaq-dev/golnag-archive/internal/service/comp"
@@ -22,42 +23,54 @@ func UploadFileHandler(log *slog.Logger) http.HandlerFunc {
 		filePaths, err := upload.UploadFileFromRequest(log, w, r, formDataKey)
 		if err != nil {
 			log.Error("Error with form", sl.Err(err))
+			http.Error(w, "Failed to upload files", http.StatusInternalServerError)
+			return
 		}
-		log.Info("Files upload successfully")
+		log.Info("Files uploaded successfully")
 
-		photoExts := map[string]bool{
-			".jpg": true, ".jpeg": true, ".png": true,
-		}
+		photoExts := map[string]bool{".jpg": true, ".jpeg": true, ".png": true}
+		videoExts := map[string]bool{".mp4": true, ".avi": true, ".mov": true, ".mkv": true, ".wmv": true, ".flv": true, ".webm": true}
 
-		videoExts := map[string]bool{
-			".mp4": true, ".avi": true, ".mov": true, ".mkv": true, ".wmv": true, ".flv": true, ".webm": true,
-		}
-
-		compressedPaths := []string{}
+		var wg sync.WaitGroup
+		compressedPaths := make(chan string, len(filePaths)) // Канал для хранения путей сжатых файлов
 
 		for _, path := range filePaths {
 			ext := filepath.Ext(path)
 
-			if photoExts[ext] {
-				log.Info("Compressing image")
-				outputPath, err := comp.CompressPhoto(path, log)
-				if err == nil {
-					removeFile(path, log)
+			wg.Add(1)
+			go func(filePath string) {
+				defer wg.Done()
+
+				var outputPath string
+				var err error
+
+				if photoExts[ext] {
+					log.Info("Compressing image", slog.String("file", filePath))
+					outputPath, err = comp.CompressPhoto(filePath, log)
+				} else if videoExts[ext] {
+					log.Info("Compressing video", slog.String("file", filePath))
+					outputPath, err = comp.CompressVideo(filePath, log)
+				} else {
+					log.Error("Unknown file type", slog.String("file", filePath))
+					return
 				}
-				compressedPaths = append(compressedPaths, outputPath)
-			} else if videoExts[ext] {
-				log.Info("Compressing video")
-				outputPathVideo, err := comp.CompressVideo(path, log)
+
 				if err == nil {
-					removeFile(path, log)
+					removeFile(filePath, log)
+					compressedPaths <- outputPath
 				}
-				compressedPaths = append(compressedPaths, outputPathVideo)
-			} else {
-				log.Error("Unknown file type", slog.String("file", path))
-			}
+			}(path)
 		}
 
-		zipPath, err := archive.CreateZipArchive(compressedPaths, log)
+		wg.Wait()
+		close(compressedPaths)
+
+		var finalPaths []string
+		for path := range compressedPaths {
+			finalPaths = append(finalPaths, path)
+		}
+
+		zipPath, err := archive.CreateZipArchive(finalPaths, log)
 		if err != nil {
 			log.Error("Error creating zip archive", sl.Err(err))
 			http.Error(w, "Failed to create ZIP archive", http.StatusInternalServerError)
